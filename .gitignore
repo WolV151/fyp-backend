@@ -1,0 +1,6 @@
+/node_modules
+.env
+/views/error.jade
+/views/index.jade
+/views/layout.jade
+/dist
