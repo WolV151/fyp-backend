@@ -2,7 +2,7 @@
   "name": "backend",
   "version": "0.0.0",
   "private": true,
-  "main": "dist/app.js",
+  "main": "dist/src/app.js",
   "scripts": {
     "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
     "build": "tsc",
@@ -11,6 +11,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "@types/mysql": "^2.15.21",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
     "dotenv": "^16.0.3",
@@ -19,6 +20,7 @@
     "jade": "^1.9.2",
     "morgan": "~1.9.1",
     "mqtt": "^4.3.7",
+    "mysql": "^2.18.1",
     "nodemon": "^2.0.20"
   },
   "devDependencies": {
