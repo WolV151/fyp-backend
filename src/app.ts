@@ -1,15 +1,20 @@
-import express from "express";
+import express, {Express} from "express";
 import dotenv from "dotenv";
 import { conn } from "../model/db"
 import { mqttClient } from "../model/mqtt"
 
 
 dotenv.config();
-const app = express();
+const app:Express = express();
 const port: string = process.env.SERVER_PORT;
 
 mqttClient.on('message', (topic, payload) => {
-    console.log('Received Message: ' +  topic + " " + JSON.parse(payload.toString()));
+    console.log('Received Message: ' +  topic);
+
+    const msgJson = JSON.parse(payload.toString())
+
+    console.log(msgJson.data);
+
 })
 
 const sql:string = "SHOW TABLES;"
@@ -18,7 +23,7 @@ conn.query(sql, (sqlerr, res) => {
     console.log(res);
 })
 
-app.get( "/", ( req, res ) => {
+app.get( "/", ( req:any, res:any ) => {
     res.send("Hi lol");
 } );
 

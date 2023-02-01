@@ -7,13 +7,13 @@ const mqttBroker: string = process.env.MQTT_BROKER_HOST!;
 const mqttPort: string = process.env.MQTT_BROKER_PORT!;
 const mqttClientId: string = process.env.MQTT_CLIENT_ID!;
 
-export const mqttClient: MqttClient = connect('mqtt://127.0.0.1:8080', {
+export const mqttClient: MqttClient = connect(`mqtt://${mqttBroker}:${mqttPort}`, {
     clean: true,
     connectTimeout: 4000,
     clientId: mqttClientId,
 })
 
-const mqttTopic: string = "/test"
+const mqttTopic: string = process.env.MQTT_PUB_TOPIC!
 
 mqttClient.on('connect', () => {
     console.log("Connected!")
