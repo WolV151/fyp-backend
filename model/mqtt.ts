@@ -11,6 +11,8 @@ export const mqttClient: MqttClient = connect(`mqtt://${mqttBroker}:${mqttPort}`
     clean: true,
     connectTimeout: 4000,
     clientId: mqttClientId,
+    username: process.env.MQTT_USER!,
+    password: process.env.MQTT_PASS!
 })
 
 const mqttTopic: string = process.env.MQTT_PUB_TOPIC!
