@@ -12,7 +12,7 @@ const dataSchema: Schema<IData> = new Schema<IData>({
 });
 
 const telemetrySchema: Schema<ITelemetry> = new Schema<ITelemetry>({
-    plug_id: { type: String },
+    id: { type: String },
     data: { type: dataSchema }
 });
 

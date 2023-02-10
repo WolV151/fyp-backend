@@ -3,14 +3,14 @@ import dotenv from "dotenv";
 import { mqttClient } from "../model/mqtt"
 import { Telemetry } from "../model/telemetry"
 import { SmartPlug } from "../model/smartPlug"
-import { SmartPlugRoute, smartPlugList } from "../routes/smartPlug"
-import mongoose from "mongoose";
+import { SmartPlugRoute, smartPlugList, flag } from "../routes/smartPlug"
+import mongoose, { Document } from "mongoose";
+import { ITelemetry } from "../interface/ITelemetry";
 
 dotenv.config();
 const app: Express = express();
 
 const port: string = process.env.SERVER_PORT;
-
 
 mongoose.connect(`mongodb://${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}/
 ${process.env.DATABASE_NAME}?authSource=${process.env.DATABASE_AUTH_SOURCE}`,
@@ -20,13 +20,12 @@ ${process.env.DATABASE_NAME}?authSource=${process.env.DATABASE_AUTH_SOURCE}`,
         dbName: process.env.DATABASE_NAME
     });
 
-
 mqttClient.on('message', (topic, payload) => {
     console.log('Received Message: ' + topic);
 
-    const msgJson = JSON.parse(payload.toString())
+    const msgJson:ITelemetry = JSON.parse(payload.toString())
 
-    const telemetry = new Telemetry({
+    const telemetry:Document = new Telemetry({
         id: msgJson.id,
         data: {
             voltage: msgJson.data.voltage,
@@ -38,9 +37,9 @@ mqttClient.on('message', (topic, payload) => {
     });
 
 
-    if (!smartPlugList.includes(msgJson.id)) {
+    if ((!smartPlugList.includes(msgJson.id)) && ((smartPlugList?.length) || (flag === 1))) {
         const smartPlug = new SmartPlug({ _id: msgJson.id });
-
+        smartPlugList.push(msgJson.id);
         smartPlug.save((err) => {
             if (err)
                 console.error(err);

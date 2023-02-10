@@ -1,6 +1,6 @@
 import { IData } from "./IData";
 
 export interface ITelemetry {
-    plug_id: string,
+    id: string,
     data: IData
 }
