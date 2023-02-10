@@ -1,71 +1,94 @@
-import express, { Express, Request, Response } from "express";
+import express, { Request, Response, Application } from "express";
 import dotenv from "dotenv";
-import { mqttClient } from "../model/mqtt"
+import { MqttClient } from "../middleware/mqtt"
+import mongoose, { Document } from "mongoose";
+
 import { Telemetry } from "../model/telemetry"
 import { SmartPlug } from "../model/smartPlug"
-import { SmartPlugRoute, smartPlugList, flag } from "../routes/smartPlug"
-import mongoose, { Document } from "mongoose";
+import { smartPlugList, flag } from "../routes/smartPlug"
 import { ITelemetry } from "../interface/ITelemetry";
 
 dotenv.config();
-const app: Express = express();
 
-const port: string = process.env.SERVER_PORT;
+export class App {
+    public app: Application;
+    public port: string;
+    public mqttClient: MqttClient;  // ugh.. I know this is rather confusing since the mqtt package class is also called MqttClient
 
-mongoose.connect(`mongodb://${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}/
-${process.env.DATABASE_NAME}?authSource=${process.env.DATABASE_AUTH_SOURCE}`,
-    {
-        user: process.env.DATABASE_USER_NAME,
-        pass: process.env.DATABASE_USER_PASS,
-        dbName: process.env.DATABASE_NAME
-    });
+    constructor(routes:any[], port:string) {
+        this.app = express();
+        this.port = port;
+        this.mqttClient = new MqttClient();
 
-mqttClient.on('message', (topic, payload) => {
-    console.log('Received Message: ' + topic);
-
-    const msgJson:ITelemetry = JSON.parse(payload.toString())
-
-    const telemetry:Document = new Telemetry({
-        id: msgJson.id,
-        data: {
-            voltage: msgJson.data.voltage,
-            current: msgJson.data.current,
-            power: msgJson.data.power,
-            power_factor: msgJson.data.power_factor,
-            timestamp: msgJson.data.timestamp
-        }
-    });
-
-
-    if ((!smartPlugList.includes(msgJson.id)) && ((smartPlugList?.length) || (flag === 1))) {
-        const smartPlug = new SmartPlug({ _id: msgJson.id });
-        smartPlugList.push(msgJson.id);
-        smartPlug.save((err) => {
-            if (err)
-                console.error(err);
-            else
-                console.log("Added New Device!")
-        })
+        this.initRoutes(routes);
+        this.initMiddleWare();
     }
 
-    telemetry.save((err) => {
-        if (err)
-            console.error(err);
-        else
-            console.log("Success");
-    });
+    private initMiddleWare() {
+        mongoose.connect(`mongodb://${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}/
+        ${process.env.DATABASE_NAME}?authSource=${process.env.DATABASE_AUTH_SOURCE}`,
+            {
+                user: process.env.DATABASE_USER_NAME,
+                pass: process.env.DATABASE_USER_PASS,
+                dbName: process.env.DATABASE_NAME
+            });
 
-    console.log(msgJson.data);
+    }
 
-})
-const smartPlugRoute: SmartPlugRoute = new SmartPlugRoute()
-app.use("/", smartPlugRoute.router);
+    private initRoutes(routes:any[]) {
+        routes.forEach(r => this.app.use("/", r.router))
+    }
 
-app.get("/", (req: Request, res: Response) => {
-    res.send("Hi lol");
-});
+    /**
+     * listen
+     */
+    public listen() {
+        this.mqttClient.client.on('message', (topic, payload) => {
+            console.log('Received Message: ' + topic);
 
-// start the express server
-app.listen(port, () => {
-    console.log(`server started at http://localhost:${port}`);
-});
+            const msgJson:ITelemetry = JSON.parse(payload.toString())
+
+            const telemetry:Document = new Telemetry({
+                id: msgJson.id,
+                data: {
+                    voltage: msgJson.data.voltage,
+                    current: msgJson.data.current,
+                    power: msgJson.data.power,
+                    power_factor: msgJson.data.power_factor,
+                    timestamp: msgJson.data.timestamp
+                }
+            });
+
+
+            if ((!smartPlugList.includes(msgJson.id)) && ((smartPlugList?.length) || (flag === 1))) {
+                const smartPlug = new SmartPlug({ _id: msgJson.id });
+                smartPlugList.push(msgJson.id);
+                smartPlug.save((err) => {
+                    if (err)
+                        console.error(err);
+                    else
+                        console.log("Added New Device!")
+                })
+            }
+
+            telemetry.save((err) => {
+                if (err)
+                    console.error(err);
+                else
+                    console.log("Success");
+            });
+
+            console.log(msgJson.data);
+
+        });
+
+        this.app.get("/", (req: Request, res: Response) => {
+            res.send("Hi lol");
+        });
+
+        // start the express server
+        this.app.listen(this.port, () => {
+            console.log(`server started at http://localhost:${this.port}`);
+        });
+    }
+}

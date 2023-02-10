@@ -2,7 +2,7 @@
   "name": "backend",
   "version": "0.0.0",
   "private": true,
-  "main": "dist/src/app.js",
+  "main": "dist/src/server.js",
   "scripts": {
     "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
     "build": "tsc",

@@ -7,12 +7,9 @@ export let flag = 0;  // empty or not
 
 export class SmartPlugRoute {
     public router: Router = express.Router();
-    public path: string = "/smartPlug"
+    private path: string = "/smartPlug"
 
 
-    /**
-     * init route
-     */
     constructor() {
         this.initRoutes();
     }
