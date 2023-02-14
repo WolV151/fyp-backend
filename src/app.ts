@@ -1,12 +1,14 @@
 import express, { Request, Response, Application } from "express";
 import dotenv from "dotenv";
 import { MqttClient } from "../middleware/mqtt"
+import bodyParser from "body-parser";
 import mongoose, { Document } from "mongoose";
 
 import { Telemetry } from "../model/telemetry"
 import { SmartPlug } from "../model/smartPlug"
 import { smartPlugList, flag } from "../routes/smartPlug"
 import { ITelemetry } from "../interface/ITelemetry";
+import { BackendRoute } from "../abstract/BackendRoute"
 
 dotenv.config();
 
@@ -15,7 +17,7 @@ export class App {
     public port: string;
     public mqttClient: MqttClient;  // ugh.. I know this is rather confusing since the mqtt package class is also called MqttClient
 
-    constructor(routes:any[], port:string) {
+    constructor(routes:BackendRoute[], port:string) {
         this.app = express();
         this.port = port;
         this.mqttClient = new MqttClient();
@@ -33,10 +35,16 @@ export class App {
                 dbName: process.env.DATABASE_NAME
             });
 
+        this.app.use(bodyParser.json())
     }
 
-    private initRoutes(routes:any[]) {
-        routes.forEach(r => this.app.use("/", r.router))
+    private initRoutes(routes:BackendRoute[]) {
+        routes.forEach(r => this.app.use("/", r.router));
+        
+        this.app.get("/", (req: Request, res: Response) => {
+            res.send("Hi lol");
+        });
+
     }
 
     /**
@@ -80,10 +88,6 @@ export class App {
 
             console.log(msgJson.data);
 
-        });
-
-        this.app.get("/", (req: Request, res: Response) => {
-            res.send("Hi lol");
         });
 
         // start the express server

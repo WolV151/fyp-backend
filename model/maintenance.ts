@@ -3,7 +3,6 @@ import { IMaintenance } from "../interface/IMaintenance";
 
 
 const maintenanceSchema: Schema<IMaintenance> = new Schema<IMaintenance>({
-    maint_id: {type: String},
     date: {type: String},
     details: {type: String},
     device_id: {type: String}
