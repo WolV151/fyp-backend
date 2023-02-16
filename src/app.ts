@@ -1,6 +1,7 @@
 import express, { Request, Response, Application } from "express";
 import dotenv from "dotenv";
 import { MqttClient } from "../middleware/mqtt"
+import { mqttC } from "../middleware/mqtt"
 import bodyParser from "body-parser";
 import mongoose, { Document } from "mongoose";
 
@@ -20,7 +21,7 @@ export class App {
     constructor(routes:BackendRoute[], port:string) {
         this.app = express();
         this.port = port;
-        this.mqttClient = new MqttClient();
+        this.mqttClient = mqttC;
 
         this.initRoutes(routes);
         this.initMiddleWare();
@@ -40,7 +41,7 @@ export class App {
 
     private initRoutes(routes:BackendRoute[]) {
         routes.forEach(r => this.app.use("/", r.router));
-        
+
         this.app.get("/", (req: Request, res: Response) => {
             res.send("Hi lol");
         });
@@ -86,7 +87,7 @@ export class App {
                     console.log("Success");
             });
 
-            console.log(msgJson.data);
+            console.log(msgJson);
 
         });
 

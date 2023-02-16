@@ -34,4 +34,5 @@ export class MqttClient {
     }
 }
 
+export let mqttC: MqttClient = new MqttClient();
 
