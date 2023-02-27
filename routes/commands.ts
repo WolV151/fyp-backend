@@ -21,7 +21,7 @@ export class CommandRoute {
     private defaultStatusPath: string = "/defaultStat";
     private setPowerReportIntervalPath: string = "/repInterval";
 
-    private pubOptions: IClientPublishOptions = { qos: 0, retain: true };
+    private pubOptions: IClientPublishOptions = { qos: 0, retain: false };
 
     constructor() {
         this.initRoutes();
@@ -62,10 +62,12 @@ export class CommandRoute {
             msg_id: 2002,
             id: req.params.id,
             data: {
-                delay_hour: req.params.hrs,
-                delay_minute: req.params.min
+                delay_hour: parseInt(req.params.hrs, 10),
+                delay_minute: parseInt(req.params.min, 10)
             }
         };
+
+        console.log(JSON.stringify(message));
 
         mqttC.client.publish(this.mqttTopic, JSON.stringify(message), this.pubOptions, (err) => {
             if (err) {
@@ -80,10 +82,12 @@ export class CommandRoute {
 
     private factoryReset = (req: Request, res: Response) => {
         const message: ICommandFormat = {
-            msg_id: 2006,
+            msg_id: 2003,
             id: req.params.id,
             data: null
         };
+
+        console.log(JSON.stringify(message));
 
         mqttC.client.publish(this.mqttTopic, JSON.stringify(message), this.pubOptions, (err) => {
             if (err) {
@@ -98,12 +102,14 @@ export class CommandRoute {
 
     private setDefaultStatus = (req:Request, res:Response) => {
         const message: ICommandFormat = {
-            msg_id: 2002,
+            msg_id: 2006,
             id: req.params.id,
             data: {
                 default_status: req.params.stat,
             }
         };
+        console.log(JSON.stringify(message));
+
 
         mqttC.client.publish(this.mqttTopic, JSON.stringify(message), this.pubOptions, (err) => {
             if (err) {
@@ -121,9 +127,11 @@ export class CommandRoute {
             msg_id: 2015,
             id: req.params.id,
             data: {
-                report_interval: req.params.intval,
+                report_interval: parseInt(req.params.intval, 10),
             }
         };
+        console.log(JSON.stringify(message));
+
 
         mqttC.client.publish(this.mqttTopic, JSON.stringify(message), this.pubOptions, (err) => {
             if (err) {

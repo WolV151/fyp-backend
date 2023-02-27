@@ -2,8 +2,9 @@
 ALL OF THE TELEMETRY QUERY OPERATIONS WILL GO HERE:
 
 1. CREATE AN INDEX ON "id" AND "device.timestamp" (DONE, also added on data.power)
-2. CREATE UTILIZATION CALCULATION FUNCTION BASED ON: https://en.wikipedia.org/wiki/Utilization_facto
-   THIS WOULD ALLOW FOR SUMMARY CALCULATIONS SUCH AS:
+2. CREATE UTILIZATION CALCULATION FUNCTION BASED ON: https://en.wikipedia.org/wiki/Utilization_factor
+https://www.energy.gov/energysaver/estimating-appliance-and-home-electronic-energy-use
+THIS WOULD ALLOW FOR SUMMARY CALCULATIONS SUCH AS:
         a. Most utilized equipment
         b. Least utilized equipment
         c. Additionally display utilization of all devices
@@ -22,16 +23,19 @@ ALL OF THE TELEMETRY QUERY OPERATIONS WILL GO HERE:
 import express, { Router, Request, Response } from "express"
 import { Telemetry } from "../model/telemetry"
 import { ITelemetry } from "../interface/ITelemetry";
+import bodyParser from "body-parser"
 import { Document } from "mongoose";
-import { IPowerConsumption } from "../interface/IPowerConsumption"
+import { IPowerConsumption } from "../interface/record/IPowerConsumption"
+
+const jsonParser = bodyParser.json();
 
 export class TelemetryRouter {
    public router: Router = express.Router();
    public path: string = "/telemetry";
 
-   private totalConsumptionPath: string = "/totalPower";
-   private totalConsumptJsPath: string = "/totalPowerTest";
+   private totalConsumptJsPath: string = "/totalPower";
    private mostConsumingPath: string = "/biggestConsumer";
+   private findDeviceConsumptionPath: string = "/findDeviceConsumption/:id"
 
    constructor() {
       this.initRoutes();
@@ -41,32 +45,14 @@ export class TelemetryRouter {
     * initRoutes
     */
    public initRoutes() {
-      this.router.get(this.path + this.totalConsumptionPath, this.getTotalPowerConsumption);
-      this.router.get(this.path + this.totalConsumptJsPath, this.totalConsumptionJs);
-      this.router.get(this.path + this.mostConsumingPath, this.biggestConsumingDevice);
+      this.router.get(this.path + this.totalConsumptJsPath, jsonParser, this.totalConsumptionJs);
+      this.router.get(this.path + this.mostConsumingPath, jsonParser, this.biggestConsumingDevice);
+      this.router.get(this.path + this.findDeviceConsumptionPath, jsonParser, this.findDeviceConsumption);
    }
 
-
-   private getTotalPowerConsumption = async (req: Request, res: Response) => {
-      const telemDoc: Document[] = await Telemetry.aggregate([
-         {
-            $group: {
-               _id: null,
-               total: { $sum: "$data.power" }
-            }
-         }
-      ], (err) => {
-         if (err) {
-            console.error(err);
-            res.status(500).send("Internal error when handling power consumptions");
-         } else
-            res.status(200).json(telemDoc);
-         res.end();
-      });
-   }
 
    private totalConsumptionJs = async (req: Request, res: Response) => {
-      const telemDoc: Document[] = await Telemetry.find({});
+      const telemDoc: Document[] = await Telemetry.find({"data.timestamp": {$gte: req.body.startDate, $lte: req.body.endDate}});
       let totalConsumption: number = 0;
 
       if (!telemDoc)
@@ -85,7 +71,7 @@ export class TelemetryRouter {
    }
 
    private biggestConsumingDevice = async (req: Request, res: Response) => {
-      const telemDoc: Document[] = await Telemetry.find({});
+      const telemDoc: Document[] = await Telemetry.find({"data.timestamp":  {$gte: req.body.startDate, $lte: req.body.endDate}});
       const consumptions: Record<string, number> = {};
       const maxCons: IPowerConsumption = {
          device_id: "",
@@ -112,11 +98,27 @@ export class TelemetryRouter {
             }
 
          });
-         res.status(200).json(consumptions);
+         res.status(200).json([maxCons, consumptions]);
       }
       res.end();
    }
 
+   private findDeviceConsumption = async (req:Request, res:Response) => {
+      const telemDoc:Document[] = await Telemetry.find({"data.timestamp":  {$gte: req.body.startDate, $lte: req.body.endDate}, "id": req.params.id});
+      const timeRangeConsumption: Record<string, number> = {};
 
+      if(!telemDoc)
+         res.status(500).send("Internal sever error")
+      else {
+         telemDoc.forEach((telemE:Document) => {
+            const jsonTelem:ITelemetry = telemE.toJSON();
+            if (jsonTelem.data.power !== undefined) {
+               timeRangeConsumption[jsonTelem.data.timestamp.toISOString()] = jsonTelem.data.power;
+            }
+         });
+         res.status(200).json(timeRangeConsumption);
+      }
+      res.end();
+   }
 
 }

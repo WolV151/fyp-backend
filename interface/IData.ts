@@ -3,5 +3,5 @@ export interface IData {
     current: number,
     power: number,
     power_factor: number,
-    timestamp: string
+    timestamp: Date
 }

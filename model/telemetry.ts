@@ -8,7 +8,7 @@ const dataSchema: Schema<IData> = new Schema<IData>({
     current: { type: Number },
     power: { type: Number },
     power_factor: { type: Number },
-    timestamp: { type: String }
+    timestamp: { type: Date }
 });
 
 const telemetrySchema: Schema<ITelemetry> = new Schema<ITelemetry>({
