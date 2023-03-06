@@ -4,11 +4,14 @@ import { MqttClient } from "../middleware/mqtt"
 import { mqttC } from "../middleware/mqtt"
 import bodyParser from "body-parser";
 import mongoose, { Document } from "mongoose";
+import cors from "cors"
 
 import { Telemetry } from "../model/telemetry"
 import { SmartPlug } from "../model/smartPlug"
+import { Device } from "../model/device";
 import { smartPlugList, flag } from "../routes/smartPlug"
 import { ITelemetry } from "../interface/ITelemetry";
+import { IDevice } from "../interface/IDevice";
 import { BackendRoute } from "../abstract/BackendRoute"
 
 dotenv.config();
@@ -37,6 +40,20 @@ export class App {
             });
 
         this.app.use(bodyParser.json())
+        this.app.use(
+            cors({
+                origin: 'http:// localhost:4200',
+                methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+                allowedHeaders: [
+                    'Content-Type',
+                    'Authorization',
+                    'Origin',
+                    'x-access-token',
+                    'XSRF-TOKEN'
+                ],
+                preflightContinue: false
+            })
+        );
     }
 
     private initRoutes(routes:BackendRoute[]) {
@@ -52,11 +69,10 @@ export class App {
      * listen
      */
     public listen() {
-        this.mqttClient.client.on('message', (topic, payload) => {
+        this.mqttClient.client.on('message', async (topic, payload) => {
             console.log('Received Message: ' + topic);
 
             const msgJson:ITelemetry = JSON.parse(payload.toString())
-
             const telemetry:Document = new Telemetry({
                 id: msgJson.id,
                 data: {
@@ -67,7 +83,6 @@ export class App {
                     timestamp: msgJson.data.timestamp
                 }
             });
-
 
             if ((!smartPlugList.includes(msgJson.id)) && ((smartPlugList?.length) || (flag === 1))) {
                 const smartPlug = new SmartPlug({ _id: msgJson.id });
@@ -80,14 +95,20 @@ export class App {
                 })
             }
 
-            telemetry.save((err) => {
-                if (err)
-                    console.error(err);
-                else
-                    console.log("Success");
-            });
+            const device:Document = await Device.findOne({plug_id: msgJson.id})
+            const deviceJson:IDevice = device.toJSON();
 
-            console.log(msgJson);
+            if (deviceJson.threshold <= msgJson.data.current){
+                telemetry.save((err) => {
+                    if (err)
+                        console.error(err);
+                    else
+                        console.log("Success");
+                });
+                console.log(msgJson);
+            }
+
+
 
         });
 

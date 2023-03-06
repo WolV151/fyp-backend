@@ -29,7 +29,8 @@ export class DeviceRoute {
         const newDevice: Document = new Device({
             device_name: req.body.device_name,
             description: req.body.description,
-            plug_id: req.body.plug_id
+            plug_id: req.body.plug_id,
+            threshold: req.body.threshold
         });
 
         newDevice.save((err) => {
@@ -63,7 +64,8 @@ export class DeviceRoute {
             {
                 device_name: req.body.device_name,
                 description: req.body.description,
-                plug_id: req.body.plug_id
+                plug_id: req.body.plug_id,
+                threshold: req.body.threshold
             }
         },
             (err: Error) => {

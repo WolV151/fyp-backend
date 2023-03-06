@@ -35,7 +35,7 @@ export class TelemetryRouter {
 
    private totalConsumptJsPath: string = "/totalPower";
    private mostConsumingPath: string = "/biggestConsumer";
-   private findDeviceConsumptionPath: string = "/findDeviceConsumption/:id"
+   private findDeviceConsumptionPath: string = "/findDeviceConsumption/:id/:startDate/:endDate"
 
    constructor() {
       this.initRoutes();
@@ -104,7 +104,7 @@ export class TelemetryRouter {
    }
 
    private findDeviceConsumption = async (req:Request, res:Response) => {
-      const telemDoc:Document[] = await Telemetry.find({"data.timestamp":  {$gte: req.body.startDate, $lte: req.body.endDate}, "id": req.params.id});
+      const telemDoc:Document[] = await Telemetry.find({"data.timestamp":  {$gte: req.params.startDate, $lte: req.params.endDate}, "id": req.params.id});
       const timeRangeConsumption: Record<string, number> = {};
 
       if(!telemDoc)
