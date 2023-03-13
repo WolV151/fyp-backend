@@ -24,7 +24,7 @@ import express, { Router, Request, Response } from "express"
 import { Telemetry } from "../model/telemetry"
 import { ITelemetry } from "../interface/ITelemetry";
 import bodyParser, { json } from "body-parser"
-import { Document, isObjectIdOrHexString } from "mongoose";
+import { Document, isObjectIdOrHexString, Query } from "mongoose";
 import { IPowerConsumption } from "../interface/record/IPowerConsumption"
 import { IConsumptionSeries } from "../interface/record/IConsumptionSeries"
 import { IDataSeries } from "../interface/record/IDataSeries"
@@ -38,6 +38,7 @@ export class TelemetryRouter {
    private totalConsumptJsPath: string = "/totalPower/:startDate/:endDate";
    private mostConsumingPath: string = "/biggestConsumer/:startDate/:endDate";
    private findDeviceConsumptionPath: string = "/findDeviceConsumption/:id/:startDate/:endDate"
+   private findUtilizationForDevicePath: string = "/findUtilization/:id/:startDate/:endDate"
 
    constructor() {
       this.initRoutes();
@@ -50,6 +51,7 @@ export class TelemetryRouter {
       this.router.get(this.path + this.totalConsumptJsPath, jsonParser, this.totalConsumptionJs);
       this.router.get(this.path + this.mostConsumingPath, jsonParser, this.biggestConsumingDevice);
       this.router.get(this.path + this.findDeviceConsumptionPath, jsonParser, this.findDeviceConsumption);
+      this.router.get(this.path + this.findUtilizationForDevicePath, this.findUtilizationForDevice);
    }
 
 
@@ -156,5 +158,32 @@ export class TelemetryRouter {
    }
    res.end();
 }
+
+private findUtilizationForDevice = async(req:Request, res:Response) => {
+   try {
+      const messageCount: number = await Telemetry.where({"data.timestamp": { $gte: req.params.startDate, $lte: req.params.endDate }, "id": req.params.id }).countDocuments();
+      const hardCodedMessageTiming: number = 5;
+      const startDate: number = new Date(req.params.startDate).valueOf();
+      const endDate: number = new Date(req.params.endDate).valueOf();
+      let totalDays: number = Math.floor((endDate - startDate) / (1000*3600*24));
+
+      if (totalDays === 0)
+         totalDays = 1;
+
+      // 1 message per 5 seconds - 120 msg per minute - 7200 per hour - 172800 per day
+
+      const utilizationPercentage:number = (messageCount / (totalDays*172800)*100)
+
+      res.status(200).json(Number((utilizationPercentage).toFixed(4)));
+   } catch (e) {
+      console.error(e);
+      res.status(500).send("Internal server error");
+   } finally {
+      res.end();
+   }
+
+
+}
+
 
 }
