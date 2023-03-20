@@ -46,15 +46,29 @@ export class DeviceRoute {
 
 
     public deleteDevice = (req: Request, res: Response) => {
-        Device.findByIdAndDelete(req.params.id, (err: Error) => {
-            if (err) {
-                console.log(err);
-                res.status(500).send("Internal error when deleting the device");
+        Device.deleteMany({
+            _id: {
+                $in: req.params.id
             }
-            else
+        }, (err:Error) => {
+            if (err){
+                console.error(err);
+                res.status(500).send("Internal server error.");
+            } else
                 res.status(200);
             res.end();
+
         })
+
+        // Device.findByIdAndDelete(req.params.id, (err: Error) => {
+        //     if (err) {
+        //         console.log(err);
+        //         res.status(500).send("Internal error when deleting the device");
+        //     }
+        //     else
+        //         res.status(200);
+        //     res.end();
+        // })
     }
 
 

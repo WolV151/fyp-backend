@@ -29,6 +29,6 @@ export class SmartPlugRoute {
         if (!smartPlugList.length)
             flag = 1;
 
-        res.send(smartPlugList);
+        res.json(smartPlugList);
     }
 }
