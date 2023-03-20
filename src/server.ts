@@ -5,6 +5,9 @@ import { DeviceRoute } from '../routes/device'
 import { MaintenanceRoute } from '../routes/maintenance'
 import { CommandRoute } from "../routes/commands"
 import { TelemetryRouter } from "../routes/telemetry"
+import { LoginRoute } from "../routes/login"
+import { RefreshRoute } from "../routes/tokenRefresh"
+import { LogoutRoute} from "../routes/logout"
 
 import dotenv from "dotenv"
 
@@ -17,6 +20,9 @@ const server = new App([
     new MaintenanceRoute(),
     new CommandRoute(),
     new TelemetryRouter(),
+    new LoginRoute(),
+    new RefreshRoute(),
+    new LogoutRoute(),
 
 ], process.env.SERVER_PORT!)
 

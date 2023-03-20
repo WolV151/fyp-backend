@@ -3,6 +3,8 @@ import { Device } from "../model/device"
 import express, { Router, Request, Response } from "express";
 import { Document } from "mongoose";
 import bodyParser from "body-parser";
+import bcrypt from "bcrypt"
+import { verifyJWT } from "../middleware/jwt"
 
 const jsonParser = bodyParser.json();
 
@@ -15,7 +17,7 @@ export class UserRoute {
     }
 
     public initRoutes() {
-        this.router.get(this.path, this.getAllUsers);
+        this.router.get(this.path, verifyJWT, this.getAllUsers);
         this.router.post(this.path, jsonParser, this.createNewUser);
         this.router.delete(this.path + "/:id", this.deleteUser);
     }
@@ -28,8 +30,9 @@ export class UserRoute {
     public createNewUser = async (req: Request, res: Response) => {
         const newUser: Document = new User({
             username: req.body.username!,
-            password: req.body.password!,
-            role: req.body.role!
+            password: await bcrypt.hash(req.body.password!, 10),
+            role: req.body.role!,
+            token: ''
         });
 
         newUser.save((err) => {

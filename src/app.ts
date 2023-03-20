@@ -5,6 +5,7 @@ import { mqttC } from "../middleware/mqtt"
 import bodyParser from "body-parser";
 import mongoose, { Document } from "mongoose";
 import cors from "cors"
+import cookieParser from "cookie-parser";
 
 import { Telemetry } from "../model/telemetry"
 import { SmartPlug } from "../model/smartPlug"
@@ -25,9 +26,8 @@ export class App {
         this.app = express();
         this.port = port;
         this.mqttClient = mqttC;
-
-        this.initRoutes(routes);
         this.initMiddleWare();
+        this.initRoutes(routes);
     }
 
     private initMiddleWare() {
@@ -40,9 +40,10 @@ export class App {
             });
 
         this.app.use(bodyParser.json())
+        this.app.use(cookieParser());
         this.app.use(
             cors({
-                origin: 'http:// localhost:4200',
+                origin: 'http://localhost:4200',
                 methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
                 allowedHeaders: [
                     'Content-Type',
