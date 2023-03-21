@@ -59,7 +59,7 @@ export class LoginRoute {
 
             const resUpdate = await User.updateOne({username: foundUserObj.username}, {token: refreshToken})
 
-            res.cookie('jwt', refreshToken, {httpOnly: true, maxAge: 24*60*60*1000, secure:true});
+            res.cookie('jwt', refreshToken, {httpOnly: true, maxAge: 24*60*60*1000, secure:true, sameSite:'none'});
             res.json({accessToken});
         } else {
             res.send(401).end()

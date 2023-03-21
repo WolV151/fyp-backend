@@ -52,7 +52,8 @@ export class App {
                     'x-access-token',
                     'XSRF-TOKEN'
                 ],
-                preflightContinue: false
+                preflightContinue: false,
+                credentials:true
             })
         );
     }

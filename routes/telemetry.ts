@@ -28,6 +28,7 @@ import { Document, isObjectIdOrHexString, Query } from "mongoose";
 import { IPowerConsumption } from "../interface/record/IPowerConsumption"
 import { IConsumptionSeries } from "../interface/record/IConsumptionSeries"
 import { IDataSeries } from "../interface/record/IDataSeries"
+import { verifyJWT } from "../middleware/jwt";
 
 const jsonParser = bodyParser.json();
 
@@ -48,10 +49,10 @@ export class TelemetryRouter {
     * initRoutes
     */
    public initRoutes() {
-      this.router.get(this.path + this.totalConsumptJsPath, jsonParser, this.totalConsumptionJs);
-      this.router.get(this.path + this.mostConsumingPath, jsonParser, this.biggestConsumingDevice);
-      this.router.get(this.path + this.findDeviceConsumptionPath, jsonParser, this.findDeviceConsumption);
-      this.router.get(this.path + this.findUtilizationForDevicePath, this.findUtilizationForDevice);
+      this.router.get(this.path + this.totalConsumptJsPath, [jsonParser, verifyJWT], this.totalConsumptionJs);
+      this.router.get(this.path + this.mostConsumingPath, [jsonParser, verifyJWT], this.biggestConsumingDevice);
+      this.router.get(this.path + this.findDeviceConsumptionPath, [jsonParser, verifyJWT], this.findDeviceConsumption);
+      this.router.get(this.path + this.findUtilizationForDevicePath, verifyJWT, this.findUtilizationForDevice);
    }
 
 
