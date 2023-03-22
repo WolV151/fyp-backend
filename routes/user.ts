@@ -18,14 +18,22 @@ export class UserRoute {
 
     public initRoutes() {
         this.router.get(this.path, verifyJWT, this.getAllUsers);
+        this.router.get(this.path + "/:id", verifyJWT, this.findUserByName);
         this.router.post(this.path, jsonParser, this.createNewUser);
         this.router.delete(this.path + "/:id", this.deleteUser);
+        this.router.patch(this.path + "/:id", jsonParser, this.updateUser);
     }
 
     public getAllUsers = async (req: Request, res: Response) => {
         const userDoc: Document[] = await User.find({}, { _id: 0 });
-        res.json(userDoc);
+        return res.json(userDoc);
     }
+
+    public findUserByName = async (req:Request, res: Response) => {
+        const userDoc: Document = await User.findOne({username: req.params.id})
+        return res.json(userDoc);
+    }
+
 
     public createNewUser = async (req: Request, res: Response) => {
         const newUser: Document = new User({
@@ -43,7 +51,7 @@ export class UserRoute {
             }
             else
                 res.status(200)
-            res.end()
+            return res.end()
         })
     }
 
@@ -53,11 +61,27 @@ export class UserRoute {
             if (err) {
                 console.log(err);
                 res.status(500).send("Internal error when deleting the device");
-            }
-            else
+            } else
                 res.status(200);
-            res.end();
+            return res.end();
         })
+    }
+
+    public updateUser = async (req: Request, res: Response) => {
+        const hashedNewPassword = await bcrypt.hash(req.body.password, 10);
+        // console.log(req.params.id)
+        User.findOneAndUpdate(
+            {username: req.params.id},
+            {$set: {username: req.body.username, password: hashedNewPassword, role: req.body.role}},
+            (err: Error) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send("Internal server error updating user.")
+            } else
+                res.status(200);
+            return res.end()
+        })
+
     }
 
     // TODO: EDIT USER... or maybe not, perhaps just update password
