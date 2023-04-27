@@ -16,7 +16,7 @@ export class MaintenanceRoute {
     public initRoutes() {
         this.router.get(this.path + "/:id", this.getAllMaintainByDeviceId);
         this.router.post(this.path, jsonParser, this.createNewMaintain);
-        this.router.delete(this.path + "/:id", this.deleteMaintain);
+        this.router.post(this.path + "/delete", this.deleteMaintain);
         this.router.patch(this.path + "/:id", jsonParser, this.updateMaintain);
     }
 
@@ -37,25 +37,41 @@ export class MaintenanceRoute {
                 console.error(err);
                 res.status(500).send("Internal error when saving new device");
             }
-            else
-                res.status(200)
+            else{
+                console.log(newMaintain);
+                res.status(200).json(newMaintain);
+            }
             res.end()
         })
     }
 
 
+    // public deleteMaintain = (req: Request, res: Response) => {
+    //     Maintenance.findByIdAndDelete(req.params.id, (err: Error) => {
+    //         if (err) {
+    //             console.log(err);
+    //             res.status(500).send("Internal error when deleting the device");
+    //         }
+    //         else
+    //             res.status(200);
+    //         res.end();
+    //     })
+    // }
+
     public deleteMaintain = (req: Request, res: Response) => {
-        Maintenance.findByIdAndDelete(req.params.id, (err: Error) => {
-            if (err) {
-                console.log(err);
-                res.status(500).send("Internal error when deleting the device");
+        Maintenance.deleteMany({
+            _id: {
+                $in: req.body
             }
-            else
+        }, (err:Error) => {
+            if (err){
+                console.error(err);
+                res.status(500).send("Internal server error.");
+            } else
                 res.status(200);
             res.end();
         })
     }
-
 
     public updateMaintain = (req: Request, res: Response) => {
         Maintenance.findByIdAndUpdate(req.params.id, {

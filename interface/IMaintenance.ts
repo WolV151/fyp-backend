@@ -1,5 +1,5 @@
 export interface IMaintenance {
-    date: string,
+    date: Date,
     details: string,
     device_id: string,
 }

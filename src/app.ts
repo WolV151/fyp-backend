@@ -62,7 +62,8 @@ export class App {
         routes.forEach(r => this.app.use("/", r.router));
 
         this.app.get("/", (req: Request, res: Response) => {
-            res.send("Hi lol");
+            // res.send("Hi lol");
+            res.send(process.env.LANG);
         });
 
     }
@@ -98,20 +99,19 @@ export class App {
             }
 
             const device:Document = await Device.findOne({plug_id: msgJson.id})
-            const deviceJson:IDevice = device.toJSON();
+            if(device) {
+                const deviceJson:IDevice = device.toJSON();
 
-            if (deviceJson.threshold <= msgJson.data.current){
-                telemetry.save((err) => {
-                    if (err)
-                        console.error(err);
-                    else
-                        console.log("Success");
-                });
-                console.log(msgJson);
+                if (deviceJson.threshold <= msgJson.data.current){
+                    telemetry.save((err) => {
+                        if (err)
+                            console.error(err);
+                        else
+                            console.log("Success");
+                    });
+                    console.log(msgJson);
+                }
             }
-
-
-
         });
 
         // start the express server
