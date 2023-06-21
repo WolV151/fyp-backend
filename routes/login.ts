@@ -33,16 +33,22 @@ export class LoginRoute {
         let foundUserObj: IUser = {username: "", password: "", role: -1, token: ""};
 
         if (!formUser.username || !formUser.password)
-            res.status(400).end();
+            return res.status(400).end();
 
         const foundUser: Document | null = await User.findOne({username: formUser.username});
 
         if (!foundUser)
-            res.status(401).end();
+            return res.status(401).end();
         else
             foundUserObj = foundUser.toJSON();
 
-        const checkPwd: boolean = await bcrypt.compare(formUser.password, foundUserObj.password);
+        let checkPwd: boolean = false
+
+        try{
+            checkPwd = await bcrypt.compare(formUser.password, foundUserObj.password);
+        } catch (e: unknown) {
+            return res.status(401).end()
+        }
 
         if (checkPwd){
             const accessToken = jwt.sign(
