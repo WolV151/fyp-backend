@@ -13,5 +13,21 @@ Additionally some management features are provided to the user:
 ## Architecture
 ![Architecture Diagram](/public/images/ArchitecturePoster.svg)
 
+The Smart Plugs are attached to a device/appliance and measure the electrical properties every n number of seconds. These telemetry messages are then send to a mosquitto broker. The back-end will connect to this broker and consume the message, which it well then save into a MongoDB database. The messages are then stored in the following format:
+
+![MQTT messages](/public/images/message.jpg)
+
+## Backend Features
+- Receive remote commands from the front-end and send to the MQTT broker and the plugs can read the comamnd.
+- CRUD on appliances/device monitored
+- CRUD User management
+- CRUD maintenance logs
+- Expose a route for all the unassigned Smart Plugs so that they can be attached to new devices
+- JWT token verification/refresh
+- Send telemetry in the required format for the front-end 
+
 ## Notable technologies
 It is written entirely in TypeScript and runs in the Node.js using Express routers. Uses MQTT.js tp establish connection with mosquitto broker to retrive information from the smart plugs. User password are hashed using bcrypt.js. Originally, there was an idea to host the project on a public domain, therefore JWT authentication was implemented with a 5 minute authentication token and 1 day refresh token.
+
+## Run
+```npm run start```
